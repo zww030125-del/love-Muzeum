@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twozz 恋爱博物馆</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0a0718 0%, #120d2b 50%, #050308 100%);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #a49cb9;
+            --accent-gold: #f3eccb;
+            --accent-glow: rgba(243, 236, 203, 0.3);
+            --purple-glow: #8b5cf6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 星空背景动效 */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px);
+            background-size: 550px 550px, 350px 350px;
+            background-position: 0 0, 40px 60px;
+            animation: starBlink 8s linear infinite;
+            opacity: 0.4;
+        }
+
+        @keyframes starBlink {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        /* 顶部导航 */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(10, 7, 24, 0.2);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .logo {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: 3px;
+            background: linear-gradient(to right, #ffffff, var(--accent-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* 欢迎视觉区 */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            padding: 20px;
+        }
+
+        .hero p.sub-tag {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            letter-spacing: 4px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-size: 3.8rem;
+            font-weight: 700;
+            letter-spacing: 6px;
+            margin-bottom: 30px;
+            text-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
+        }
+
+        /* 恋爱进行时高精度计时器 */
+        .timer-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            padding: 25px 50px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .timer-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+
+        .timer-display {
+            font-size: 1.6rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .timer-display span {
+            color: var(--accent-gold);
+            text-shadow: 0 0 10px var(--accent-glow);
+            margin: 0 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.8rem;
+        }
+
+        /* 主体内容包裹 */
+        .wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            padding: 0 20px 100px;
+        }
+
+        .chapter {
+            margin-bottom: 120px;
+        }
+
+        .chapter-title-box {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .chapter-num {
+            font-size: 0.9rem;
+            color: var(--purple-glow);
+            letter-spacing: 2px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .chapter-title-box h2 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+        }
+
+        /* 规整的高级网格布局（彻底解决大小不一问题） */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .photo-item {
+            position: relative;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+            cursor: pointer;
+            height: 360px; /* 固定卡片高度，让所有格子规整统一 */
+        }
+
+        .photo-item:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.15);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        /* 核心对齐样式 */
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 自动居中裁剪填充，绝不拉伸，完美规整 */
+            display: block;
+        }
+
+        /* 只有鼠标移入才从底部浮现的文字样式 */
+        .photo-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 25px 15px 15px;
+            font-size: 0.95rem;
+            color: #ffffff;
+            background: linear-gradient(transparent, rgba(10, 7, 24, 0.95)); /* 渐变黑色遮罩确保文字清晰 */
+            text-align: center;
+            letter-spacing: 2px;
+            opacity: 0; /* 默认完全隐藏 */
+            transform: translateY(15px); /* 默认沉在下方一点 */
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+
+        /* 鼠标悬浮在卡片上时触发显示 */
+        .photo-item:hover .photo-caption {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 右下角极简悬浮音乐部件 */
+        .audio-widget {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(15, 12, 32, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            padding: 12px 24px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .audio-widget:hover {
+            border-color: rgba(255,255,255,0.2);
+            transform: scale(1.03);
+        }
+
+        .vinyl {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #222 30%, #000 70%);
+            border: 2px solid #444;
+            position: relative;
+        }
+
+        .vinyl::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px; height: 10px;
+            background: var(--accent-gold);
+            border-radius: 50%;
+        }
+
+        .audio-widget.playing .vinyl {
+            animation: rotateVinyl 5s linear infinite;
+        }
+
+        @keyframes rotateVinyl {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .equalizer {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 18px;
+        }
+
+        .eq-bar {
+            width: 3px;
+            height: 3px;
+            background-color: var(--accent-gold);
+            border-radius: 1px;
+            transition: height 0.2s ease;
+        }
+
+        .audio-widget.playing .eq-bar:nth-child(1) { animation: jump 0.6s ease infinite alternate; }
+        .audio-widget.playing .eq-bar:nth-child(2) { animation: jump 0.4s ease infinite alternate 0.1s; }
+        .audio-widget.playing .eq-bar:nth-child(3) { animation: jump 0.8s ease infinite alternate 0.2s; }
+
+        @keyframes jump {
+            0% { height: 3px; }
+            100% { height: 18px; }
+        }
+
+        .track-name {
+            font-size: 0.85rem;
+            color: var(--text-main);
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        /* 全屏灯箱预览 */
+        .lightbox {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(5, 3, 8, 0.95);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .lightbox.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .lightbox-content {
+            max-width: 90vw;
+            max-height: 82vh;
+            position: relative;
+        }
+
+        .lightbox-img {
+            max-width: 100%;
+            max-height: 82vh;
+            display: block;
+            object-fit: contain; /* 放大看原图时绝对不裁剪 */
+            border-radius: 8px;
+        }
+
+        .lightbox-caption {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.05rem;
+            color: var(--text-main);
+            letter-spacing: 2px;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 30px; right: 40px;
+            color: var(--text-main);
+            font-size: 2rem;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        .lightbox-close:hover { opacity: 1; }
+
+        @media (max-width: 768px) {
+            header { padding: 15px 20px; }
+            .hero h1 { font-size: 2.4rem; letter-spacing: 3px; }
+            .timer-card { padding: 20px 25px; }
+            .timer-display { font-size: 1.1rem; }
+            .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+            .photo-item { height: 220px; border-radius: 12px; }
+            .audio-widget { bottom: 20px; right: 20px; padding: 10px 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stars"></div>
+
+    <audio id="bgMusic" src="周杰伦 - 可爱女人.mp3" loop></audio>
+
+    <header>
+        <div class="logo">Twozz</div>
+    </header>
+
+    <section class="hero">
+        <p class="sub-tag">The Digital Museum of Romance</p>
+        <h1>Twozz 恋爱博物馆</h1>
+        <div class="timer-card">
+            <div class="timer-label">恋爱进行时</div>
+            <div class="timer-display" id="runtimeClock">正在精密同步幸福数据...</div>
+        </div>
+    </section>
+
+    <div class="wrapper">
+
+        <section class="chapter">
+            <div class="chapter-title-box">
+                <div class="chapter-num">Chapter I</div>
+                <h2>漂亮的让我面红的可爱女人</h2>
+            </div>
+            <div class="gallery-grid">
+                <script>
+                    for(let i=1; i<=26; i++) {
+                        let num = String(i).padStart(2, '0');
+                        document.write(`
+                            <div class="photo-item" onclick="openLightbox(this)">
+                                <img src="ch1_${num}.jpg" alt="闪闪发光的你">
+                                <div class="photo-caption">闪闪发光的你</div>
+                            </div>
+                        `);
+                    }
+                </script>
+            </div>
+        </section>
+
+        <section class="chapter">
+            <div class="chapter-title-box">
+                <div class="chapter-num">Chapter II</div>
+                <h2>想要有直升机，想要和你飞到宇宙去</h2>
+            </div>
+            <div class="gallery-grid">
+                <script>
+                    for(let i=1; i<=10; i++) {
+                        let num = String(i).padStart(2, '0');
+                        document.write(`
+                            <div class="photo-item" onclick="openLightbox(this)">
+                                <img src="ch2_${num}.jpg" alt="我们的甜蜜瞬间">
+                                <div class="photo-caption">我们的甜蜜瞬间</div>
+                            </div>
+                        `);
+                    }
+                </script>
+            </div>
+        </section>
+
+        <section class="chapter">
+            <div class="chapter-title-box">
+                <div class="chapter-num">Chapter III</div>
+                <h2>世界因为你而变得漂亮</h2>
+            </div>
+            <div class="gallery-grid">
+                <script>
+                    for(let i=1; i<=11; i++) {
+                        let num = String(i).padStart(2, '0');
+                        document.write(`
+                            <div class="photo-item" onclick="openLightbox(this)">
+                                <img src="ch3_${num}.jpg" alt="生活的烟火气">
+                                <div class="photo-caption">生活的烟火气</div>
+                            </div>
+                        `);
+                    }
+                </script>
+            </div>
+        </section>
+
+    </div>
+
+    <div class="audio-widget" id="audioWidget" onclick="handleAudioClick()">
+        <div class="vinyl"></div>
+        <div class="equalizer">
+            <span class="eq-bar"></span>
+            <span class="eq-bar"></span>
+            <span class="eq-bar"></span>
+        </div>
+        <div class="track-name">周杰伦 - 可爱女人</div>
+    </div>
+
+    <div class="lightbox" id="customLightbox">
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+        <div class="lightbox-content">
+            <img class="lightbox-img" id="lightboxImg" src="" alt="放大预览">
+            <div class="lightbox-caption" id="lightboxCaption"></div>
+        </div>
+    </div>
+
+    <script>
+        // 1. 高精度恋爱计时器 (基准：2019-05-03 23:57:00)
+        const relationshipStart = new Date('2019-05-03T23:57:00');
+
+        function runLiveClock() {
+            const currentTime = new Date();
+            const timeDifference = currentTime - relationshipStart;
+
+            if (timeDifference < 0) return;
+
+            const calcDays = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+            const calcHours = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const calcMins = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+            const calcSecs = Math.floor((timeDifference % (1000 * 60)) / 1000);
+
+            document.getElementById('runtimeClock').innerHTML = 
+                `<span>${calcDays}</span> 天 <span>${String(calcHours).padStart(2,'0')}</span> 小时 <span>${String(calcMins).padStart(2,'0')}</span> 分 <span>${String(calcSecs).padStart(2,'0')}</span> 秒`;
+        }
+        setInterval(runLiveClock, 1000);
+        runLiveClock();
+
+        // 2. 背景音乐交互
+        const localAudio = document.getElementById('bgMusic');
+        const widgetContainer = document.getElementById('audioWidget');
+
+        function handleAudioClick() {
+            if (localAudio.paused) {
+                localAudio.play().then(() => {
+                    widgetContainer.classList.add('playing');
+                }).catch(error => console.log("需手动授权播放：", error));
+            } else {
+                localAudio.pause();
+                widgetContainer.classList.remove('playing');
+            }
+        }
+
+        // 3. 灯箱大图预览逻辑
+        const lightboxEl = document.getElementById('customLightbox');
+        const lightboxImgEl = document.getElementById('lightboxImg');
+        const lightboxCapEl = document.getElementById('lightboxCaption');
+
+        function openLightbox(element) {
+            const clickedImg = element.querySelector('img').src;
+            const clickedText = element.querySelector('.photo-caption').innerText;
+            
+            lightboxImgEl.src = clickedImg;
+            lightboxCapEl.innerText = clickedText;
+            lightboxEl.classList.add('active');
+        }
+
+        function closeLightbox() {
+            lightboxEl.classList.remove('active');
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLightbox();
+        });
+    </script>
+</body>
+</html>
